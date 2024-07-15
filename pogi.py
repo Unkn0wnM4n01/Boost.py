@@ -35,4 +35,3 @@ if __name__ == "__main__":
     num_threads = int(sys.argv[2])
     duration = int(sys.argv[3])
     start_attack(target_url, num_threads, duration)
-      
